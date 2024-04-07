@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>弹幕视频播放器</title>
+    <script src="https://unpkg.com/nplayer@latest/dist/index.min.js"></script>
+    <script src="https://unpkg.com/@nplayer/danmaku@latest/dist/index.min.js"></script>
+</head>
+
+<body>
+    <script>
+        let offset = 0  //弹幕出现时间偏移
+        let src = "video/001"   //资源位置
+
+        //加载xml弹幕文件
+        const xhr = new XMLHttpRequest();
+        let items = []
+        xhr.onload = () => {
+            let dNode = xhr.responseXML.querySelectorAll("d")
+            dNode.forEach(element => {
+                let danmakuStyle = element.attributes.p.nodeValue
+                let danmakuContent = element.innerHTML
+                items.push(createItem(danmakuStyle, danmakuContent))
+            });
+        };
+
+        xhr.onerror = () => {
+            alert("弹幕文件加载失败，请检查路径和文件名是否对应！")
+        };
+
+        xhr.open("GET", src + ".xml");
+        xhr.responseType = "document";
+        xhr.send();
+
+        const danmakuOptions = {
+            items: items,
+            speed: 0.5
+        }
+
+        //加载播放器
+        const player = new NPlayer.Player({
+            src: src + ".mp4",
+            plugins: [new NPlayerDanmaku(danmakuOptions)]
+        })
+
+        player.mount(document.body)
+
+
+        function createItem(danmakuStyle, danmakuContent) {
+            let time = danmakuStyle.split(",")[0]  //弹幕出现时间
+            let type = danmakuStyle.split(",")[1]  //弹幕类型
+            let fontSize = danmakuStyle.split(",")[2]  //弹幕字号
+            let color = danmakuStyle.split(",")[3]  //弹幕颜色
+            return {
+                time: parseFloat(time) + offset,
+                text: danmakuContent,
+                color: "#" + parseInt(color).toString(16).toUpperCase(),
+                type: getType(type),
+            }
+        }
+
+        function getType(orgType) {
+            switch (orgType) {
+                case "1":
+                    return "scroll"
+                case "2":
+                    return "scroll"
+                case "3":
+                    return "scroll"
+                case "4":
+                    return "bottom"
+                default:
+                    return "top"
+            }
+        }
+    </script>
+</body>
+
+</html>
