@@ -23,6 +23,9 @@
                 let danmakuStyle = element.attributes.p.nodeValue
                 let danmakuContent = element.innerHTML
                 items.push(createItem(danmakuStyle, danmakuContent))
+
+                //整理弹幕顺序
+                items.sort((a, b) => a.time - b.time)
             });
         };
 
