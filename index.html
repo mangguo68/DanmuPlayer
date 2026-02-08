@@ -7,17 +7,63 @@
     <title>弹幕视频播放器</title>
     <script src="https://unpkg.com/nplayer@latest/dist/index.min.js"></script>
     <script src="https://unpkg.com/@nplayer/danmaku@latest/dist/index.min.js"></script>
+    <style>
+        #container {
+            width: 80%;
+            margin: 100px auto;
+        }
+        #player-instruction {
+            margin-top: 20px;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+        .current-file {
+            line-height: 1.5;
+        }
+        .current-file:last-child {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 
 <body>
+    <div id="container">
+        <!-- 当前加载的视频和弹幕文件 -->
+        <div>
+            <p id="current-video" class="current-file">当前加载的视频：未知</p>
+            <p id="current-danmaku" class="current-file">当前加载的弹幕：未知</p>
+        </div>
+        <div id="player-container"></div>
+        <!-- 弹幕视频播放器使用说明 -->
+        <p id="player-instruction">
+            1. 请将视频文件和弹幕文件放在同一目录下，视频文件后缀为.mp4，弹幕文件后缀为.xml。<br>
+            2. 请将视频文件和弹幕文件的文件名分别填写在src和src + ".xml"中。<br>
+            3. 请将弹幕出现时间偏移填写在offset中，单位为秒。<br>
+            4. 请将弹幕文件中的弹幕内容和样式填写在createItem函数中。<br>
+            5. 请根据需要修改弹幕的速度和显示时间。<br>
+        </p>
+    </div>
+
     <script>
         let offset = 0  //弹幕出现时间偏移
-        let src = "video/001"   //资源位置
+        let src = "video/001"   //视频资源位置
 
         //加载xml弹幕文件
         const xhr = new XMLHttpRequest();
         let items = []
         xhr.onload = () => {
+            //检查HTTP状态码
+            if (xhr.status !== 200) {
+                alert("弹幕文件加载失败，请检查路径和文件名是否对应！")
+                return
+            }
+            
+            //检查responseXML是否存在
+            if (!xhr.responseXML) {
+                alert("弹幕文件加载失败，请检查路径和文件名是否对应！")
+                return
+            }
+            
             let dNode = xhr.responseXML.querySelectorAll("d")
             dNode.forEach(element => {
                 let danmakuStyle = element.attributes.p.nodeValue
@@ -27,6 +73,10 @@
                 //整理弹幕顺序
                 items.sort((a, b) => a.time - b.time)
             });
+            //更新当前加载的弹幕文件
+            document.getElementById("current-danmaku").innerHTML = "当前加载的弹幕：" + src + ".xml"
+            //更新当前加载的视频文件
+            document.getElementById("current-video").innerHTML = "当前加载的视频：" + src + ".mp4"
         };
 
         xhr.onerror = () => {
@@ -48,8 +98,7 @@
             plugins: [new NPlayerDanmaku(danmakuOptions)]
         })
 
-        player.mount(document.body)
-
+        player.mount(document.getElementById("player-container"))
 
         function createItem(danmakuStyle, danmakuContent) {
             let time = danmakuStyle.split(",")[0]  //弹幕出现时间
